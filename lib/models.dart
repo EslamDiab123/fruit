@@ -31,7 +31,7 @@ class CartItem {
   });
 
   Map<String, dynamic> toJson() {
-    return {"name": name, "image": image, "price": price, "quantity": quantity};
+    return {'name': name, 'image': image, 'price': price, 'quantity': quantity};
   }
 
   factory CartItem.fromJson(Map<String, dynamic> json) {

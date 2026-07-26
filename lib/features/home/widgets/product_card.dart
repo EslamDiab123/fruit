@@ -1,21 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:fruit/core/constants/app_breakpoints.dart';
-import 'package:fruit/core/constants/app_colors.dart';
-import 'package:fruit/core/constants/app_text_styles.dart';
+import 'package:fruit/core/app_theme.dart';
 import 'package:fruit/models.dart';
 
-/// Responsive product card used in the home grid.
-///
-/// Inline quantity controls replace the old Positioned [AddtoCart] /
-/// [RemoveFromCart] widgets, keeping the same cart logic but within a
-/// self-contained card layout that works in a SliverGrid or a GridView.
-///
-/// Touch targets, font sizes, and button dimensions scale up on tablets.
 class ProductCard extends StatelessWidget {
   final Products product;
-
-  /// 0 = not in cart; >0 = current quantity.
   final int cartQuantity;
   final bool isFavourite;
   final VoidCallback onAddToCart;
@@ -37,9 +26,8 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double w = MediaQuery.sizeOf(context).width;
-    final bool isTabletOrWider = w >= AppBreakpoints.tablet;
+    final bool isTabletOrWider = w >= tabletBreakpoint;
 
-    // Responsive sizes
     final double favBtnSize = isTabletOrWider ? 36.0 : 30.0;
     final double favIconSize = isTabletOrWider ? 18.0 : 15.0;
     final double productNameSize = isTabletOrWider ? 15.5 : 15.0;
@@ -61,7 +49,6 @@ class ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Image section ─────────────────────────────────────────────────
           Expanded(
             flex: 5,
             child: Stack(
@@ -87,7 +74,6 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Favourite button — larger touch target on tablet
                 Positioned(
                   top: 8,
                   right: 8,
@@ -119,7 +105,6 @@ class ProductCard extends StatelessWidget {
               ],
             ),
           ),
-          // ── Info section ──────────────────────────────────────────────────
           Expanded(
             flex: 4,
             child: Padding(
@@ -182,13 +167,6 @@ class ProductCard extends StatelessWidget {
   }
 }
 
-// ─── Private cart-control widget ──────────────────────────────────────────────
-
-/// Shows a single "+" button when [quantity] == 0, or a compact
-/// decrement / count / increment control when [quantity] > 0.
-///
-/// Quantity never reaches negative: decrement at 1 removes the item entirely
-/// (handled by the parent via [onRemove]).
 class _CartControl extends StatelessWidget {
   final int quantity;
   final VoidCallback onAdd;
@@ -234,7 +212,6 @@ class _CartControl extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Decrement / delete
           GestureDetector(
             onTap: onRemove,
             child: Container(
@@ -255,7 +232,6 @@ class _CartControl extends StatelessWidget {
               ),
             ),
           ),
-          // Quantity count
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 7),
             child: Text(
@@ -267,7 +243,6 @@ class _CartControl extends StatelessWidget {
               ),
             ),
           ),
-          // Increment
           GestureDetector(
             onTap: onAdd,
             child: Container(

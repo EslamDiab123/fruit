@@ -1,15 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 
-import 'package:fruit/core/constants/app_breakpoints.dart';
-import 'package:fruit/core/constants/app_colors.dart';
-import 'package:fruit/features/home/data/home_data.dart';
+import 'package:fruit/core/app_theme.dart';
+import 'package:fruit/features/home/home_data.dart';
 
-/// Promotional image carousel with animated page-indicator dots and a
-/// corrected-text overlay gradient at the bottom of each slide.
-///
-/// Set [enableAutoPlay] to false during widget tests to prevent timer-based
-/// hangs when using [WidgetTester.pump] instead of [pumpAndSettle].
 class PromoBanner extends StatefulWidget {
   final List<BannerItem> bannerItems;
   final bool enableAutoPlay;
@@ -30,11 +24,8 @@ class _PromoBannerState extends State<PromoBanner> {
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.sizeOf(context).width;
-    final bool isTabletOrWider = screenWidth >= AppBreakpoints.tablet;
+    final bool isTabletOrWider = screenWidth >= tabletBreakpoint;
 
-    // Responsive banner height:
-    //   mobile  → 46 % of screen width, clamped 150–200 px
-    //   tablet+ → 35 % of screen width, clamped 260–300 px
     final double bannerHeight = isTabletOrWider
         ? (screenWidth * 0.35).clamp(260.0, 300.0)
         : (screenWidth * 0.46).clamp(150.0, 200.0);
@@ -53,9 +44,7 @@ class _PromoBannerState extends State<PromoBanner> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Background image
                   Image.asset(item.imagePath, fit: BoxFit.cover),
-                  // Gradient overlay with corrected promotional text
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -123,7 +112,6 @@ class _PromoBannerState extends State<PromoBanner> {
           ),
         ),
         const SizedBox(height: 10),
-        // Animated dot indicators
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(widget.bannerItems.length, (i) {

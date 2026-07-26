@@ -4,118 +4,240 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:fruit/features/home/presentation/pages/home_page.dart';
-import 'package:fruit/features/home/presentation/widgets/product_card.dart';
-import 'package:fruit/features/home/presentation/widgets/search_field.dart';
-import 'package:fruit/features/home/presentation/widgets/grocery_bottom_nav.dart';
-import 'package:fruit/features/home/presentation/widgets/section_header.dart';
+import 'package:fruit/features/home/home_page.dart';
+import 'package:fruit/features/home/widgets/home_bottom_bars.dart';
+import 'package:fruit/features/home/widgets/home_header.dart';
+import 'package:fruit/features/home/widgets/product_card.dart';
 
-// ─── Test helpers ─────────────────────────────────────────────────────────────
-
-/// Wraps [HomePage] in a MaterialApp with auto-play disabled so carousel
-/// timers do not block [WidgetTester.pump] calls.
 Widget _buildApp() {
   return const MaterialApp(home: HomePage(enableBannerAutoPlay: false));
 }
 
-/// Pumps the widget tree and waits for the async [_loadCart] call in
-/// [initState] to complete without relying on [pumpAndSettle] (which would
-/// hang while the carousel animation loop is running).
 Future<void> _pumpHome(WidgetTester tester) async {
   await tester.pumpWidget(_buildApp());
-  // Allow the SharedPreferences async load to finish.
+  // Give the asynchronous cart load time to complete.
   await tester.pump(const Duration(milliseconds: 100));
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  // ── Mobile: iPhone 12 — 390 × 844 ────────────────────────────────────────
-  group('HomePage — narrow mobile (390 × 844)', () {
-    void setMobileView(WidgetTester tester) {
-      tester.view.physicalSize = const Size(390, 844);
+  group('HomePage — narrow mobile (360 × 800)', () {
+    testWidgets('renders without exceptions', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-    }
 
-    testWidgets('renders without exceptions', (tester) async {
-      setMobileView(tester);
       await _pumpHome(tester);
+
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('search field is present', (tester) async {
-      setMobileView(tester);
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await _pumpHome(tester);
+
       expect(find.byType(SearchField), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });
 
     testWidgets('"Fresh Products" section header is visible', (tester) async {
-      setMobileView(tester);
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await _pumpHome(tester);
-      expect(find.byType(SectionHeader), findsWidgets);
+
       expect(find.text('Fresh Products'), findsOneWidget);
     });
 
-    testWidgets('product cards are rendered (mobile uses SliverGrid — lazy)', (
-      tester,
-    ) async {
-      setMobileView(tester);
+    testWidgets('product cards are rendered', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await _pumpHome(tester);
-      // SliverGrid builds lazily: at least the first row (2 cards) is visible.
+
       expect(find.byType(ProductCard), findsWidgets);
     });
 
-    testWidgets('bottom navigation bar present with Home tab selected', (
+    testWidgets('mobile uses two compact product columns', (tester) async {
+      tester.view.physicalSize = const Size(400, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await _pumpHome(tester);
+
+      final card1 = find.byKey(const ValueKey('Banana'));
+      final card2 = find.byKey(const ValueKey('Lemon'));
+      final card3 = find.byKey(const ValueKey('Orange'));
+
+      expect(card1, findsOneWidget);
+      expect(card2, findsOneWidget);
+      expect(card3, findsOneWidget);
+
+      final pos1 = tester.getTopLeft(card1);
+      final pos2 = tester.getTopLeft(card2);
+      final pos3 = tester.getTopLeft(card3);
+
+      expect(
+        (pos1.dy - pos2.dy).abs(),
+        lessThan(5),
+        reason: 'Mobile: Banana and Lemon should be in the same row',
+      );
+
+      expect(
+        pos2.dx,
+        greaterThan(pos1.dx),
+        reason: 'Mobile: Lemon should be in the right column',
+      );
+
+      expect(
+        pos3.dy,
+        greaterThan(pos1.dy + 50),
+        reason: 'Mobile: Orange should be in the second row',
+      );
+    });
+
+    testWidgets('bottom navigation bar is present with Home selected', (
       tester,
     ) async {
-      setMobileView(tester);
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await _pumpHome(tester);
+
       expect(find.byType(GroceryBottomNav), findsOneWidget);
       expect(find.text('Home'), findsOneWidget);
     });
+  });
 
-    testWidgets('no RenderFlex overflow at mobile size', (tester) async {
-      setMobileView(tester);
+  group('HomePage — tablet (768 × 1024)', () {
+    testWidgets('renders without exceptions at tablet size', (tester) async {
+      tester.view.physicalSize = const Size(768, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await _pumpHome(tester);
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('no RenderFlex overflow at tablet size', (tester) async {
+      tester.view.physicalSize = const Size(768, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       final overflowErrors = <Object>[];
-      final original = FlutterError.onError;
+      final originalOnError = FlutterError.onError;
       FlutterError.onError = (details) {
         if (details.exception.toString().contains('overflowed')) {
           overflowErrors.add(details.exception);
         } else {
-          original?.call(details);
+          originalOnError?.call(details);
         }
       };
-      addTearDown(() => FlutterError.onError = original);
+      addTearDown(() => FlutterError.onError = originalOnError);
 
       await _pumpHome(tester);
-      expect(overflowErrors, isEmpty, reason: 'Layout overflow on mobile');
+
+      expect(overflowErrors, isEmpty, reason: 'Layout overflow detected');
+    });
+
+    testWidgets('more product cards visible on wider viewport', (tester) async {
+      tester.view.physicalSize = const Size(768, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await _pumpHome(tester);
+
+      expect(find.byType(ProductCard), findsWidgets);
     });
   });
 
-  // ── Tablet: iPad (768 × 1024) ─────────────────────────────────────────────
-  group('HomePage — tablet iPad (768 × 1024)', () {
-    void setTabletView(WidgetTester tester) {
+  group('HomePage — iPad (768 × 1024) — 2×2 product grid', () {
+    void setTabletViewport(WidgetTester tester) {
       tester.view.physicalSize = const Size(768, 1024);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
     }
 
-    testWidgets('renders without exceptions', (tester) async {
-      setTabletView(tester);
+    testWidgets('renders 4 product cards without exceptions', (tester) async {
+      setTabletViewport(tester);
       await _pumpHome(tester);
+
       expect(tester.takeException(), isNull);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pump();
+      expect(find.byType(ProductCard), findsWidgets);
     });
 
-    testWidgets('no RenderFlex overflow at tablet size', (tester) async {
-      setTabletView(tester);
+    testWidgets(
+      'product grid uses 2×2 layout — cards 1 & 2 in same row, card 3 below',
+      (tester) async {
+        setTabletViewport(tester);
+        await _pumpHome(tester);
+
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -200));
+        await tester.pump();
+
+        final card1 = find.byKey(const ValueKey('Banana'));
+        final card2 = find.byKey(const ValueKey('Lemon'));
+        final card3 = find.byKey(const ValueKey('Orange'));
+
+        expect(card1, findsOneWidget);
+        expect(card2, findsOneWidget);
+        expect(card3, findsOneWidget);
+
+        final pos1 = tester.getTopLeft(card1);
+        final pos2 = tester.getTopLeft(card2);
+        final pos3 = tester.getTopLeft(card3);
+
+        expect(
+          (pos1.dy - pos2.dy).abs(),
+          lessThan(5),
+          reason: 'iPad: Banana and Lemon should be in the same row (row 1)',
+        );
+
+        expect(
+          pos2.dx,
+          greaterThan(pos1.dx),
+          reason: 'iPad: Lemon should be in the right column',
+        );
+
+        expect(
+          pos3.dy,
+          greaterThan(pos1.dy + 50),
+          reason: 'iPad: Orange should be in the second row, well below row 1',
+        );
+
+        expect(
+          (pos3.dx - pos1.dx).abs(),
+          lessThan(5),
+          reason: 'iPad: Orange should align with Banana in the left column',
+        );
+      },
+    );
+
+    testWidgets('no rendering overflow at 768 × 1024', (tester) async {
+      setTabletViewport(tester);
+
       final overflowErrors = <Object>[];
       final original = FlutterError.onError;
       FlutterError.onError = (details) {
@@ -128,59 +250,118 @@ void main() {
       addTearDown(() => FlutterError.onError = original);
 
       await _pumpHome(tester);
-      expect(overflowErrors, isEmpty, reason: 'Layout overflow on iPad');
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
+      await tester.pump();
+
+      expect(
+        overflowErrors,
+        isEmpty,
+        reason: 'No layout overflow should occur on iPad',
+      );
     });
 
-    testWidgets('all 4 products built (GridView shrinkWrap on tablet)', (
-      tester,
-    ) async {
-      setTabletView(tester);
-      await _pumpHome(tester);
-      // Tablet uses GridView(shrinkWrap: true) so all items are built eagerly.
-      expect(find.byType(ProductCard), findsNWidgets(4));
-    });
+    testWidgets(
+      'last product row is not covered by bottom navigation after scrolling',
+      (tester) async {
+        setTabletViewport(tester);
+        await _pumpHome(tester);
 
-    testWidgets('grid uses 2 columns — no card row wider than half viewport', (
-      tester,
-    ) async {
-      setTabletView(tester);
-      await _pumpHome(tester);
+        await tester.drag(
+          find.byType(CustomScrollView),
+          const Offset(0, -2000),
+        );
+        await tester.pump();
 
-      // Verify 2-column layout: with crossAxisCount=2 and the 720px constraint
-      // (+32 px padding each side) each card occupies (720-64-20)/2 ≈ 318 px.
-      // A 4-column layout would produce cards ≈ 159 px — far too narrow.
-      // Checking that we find exactly 4 cards (2 rows × 2 cols) is sufficient
-      // because the GridView is configured with crossAxisCount=2 on this size.
-      expect(find.byType(ProductCard), findsNWidgets(4));
+        final pepperFinder = find.byKey(const ValueKey('Pepper'));
+        expect(
+          pepperFinder,
+          findsOneWidget,
+          reason: 'Pepper card should be visible after scrolling to the bottom',
+        );
 
-      // Also confirm no overflow (which would occur if 4-col fit failed).
-      expect(tester.takeException(), isNull);
-    });
+        final cardBottom = tester.getBottomLeft(pepperFinder).dy;
+        final navTop = tester.getTopLeft(find.byType(GroceryBottomNav)).dy;
 
-    testWidgets('bottom nav is present', (tester) async {
-      setTabletView(tester);
-      await _pumpHome(tester);
-      expect(find.byType(GroceryBottomNav), findsOneWidget);
-    });
+        expect(
+          cardBottom,
+          lessThanOrEqualTo(navTop + 1),
+          reason:
+              'Last product card bottom edge should not extend past the '
+              'bottom navigation top edge',
+        );
+      },
+    );
   });
 
-  // ── Tablet: iPad Pro (1024 × 1366) ────────────────────────────────────────
-  group('HomePage — iPad Pro (1024 × 1366)', () {
-    void setIpadProView(WidgetTester tester) {
+  group('HomePage — iPad Pro (1024 × 1366) — 2×2 product grid', () {
+    void setIpadProViewport(WidgetTester tester) {
       tester.view.physicalSize = const Size(1024, 1366);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
     }
 
-    testWidgets('renders without exceptions', (tester) async {
-      setIpadProView(tester);
+    testWidgets('renders without exceptions at iPad Pro size', (tester) async {
+      setIpadProViewport(tester);
       await _pumpHome(tester);
+
       expect(tester.takeException(), isNull);
+      expect(find.byType(ProductCard), findsWidgets);
     });
 
-    testWidgets('no RenderFlex overflow at iPad Pro size', (tester) async {
-      setIpadProView(tester);
+    testWidgets(
+      'product grid uses 2×2 layout — cards 1 & 2 in same row, card 3 below',
+      (tester) async {
+        setIpadProViewport(tester);
+        await _pumpHome(tester);
+
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -200));
+        await tester.pump();
+
+        final card1 = find.byKey(const ValueKey('Banana'));
+        final card2 = find.byKey(const ValueKey('Lemon'));
+        final card3 = find.byKey(const ValueKey('Orange'));
+
+        expect(card1, findsOneWidget);
+        expect(card2, findsOneWidget);
+        expect(card3, findsOneWidget);
+
+        final pos1 = tester.getTopLeft(card1);
+        final pos2 = tester.getTopLeft(card2);
+        final pos3 = tester.getTopLeft(card3);
+
+        expect(
+          (pos1.dy - pos2.dy).abs(),
+          lessThan(5),
+          reason:
+              'iPad Pro: Banana and Lemon should be in the same row (row 1)',
+        );
+
+        expect(
+          pos2.dx,
+          greaterThan(pos1.dx),
+          reason: 'iPad Pro: Lemon should be in the right column',
+        );
+
+        expect(
+          pos3.dy,
+          greaterThan(pos1.dy + 50),
+          reason:
+              'iPad Pro: Orange should be in the second row, well below row 1',
+        );
+
+        expect(
+          (pos3.dx - pos1.dx).abs(),
+          lessThan(5),
+          reason:
+              'iPad Pro: Orange should align with Banana in the left column',
+        );
+      },
+    );
+
+    testWidgets('no rendering overflow at 1024 × 1366', (tester) async {
+      setIpadProViewport(tester);
+
       final overflowErrors = <Object>[];
       final original = FlutterError.onError;
       FlutterError.onError = (details) {
@@ -193,33 +374,61 @@ void main() {
       addTearDown(() => FlutterError.onError = original);
 
       await _pumpHome(tester);
-      expect(overflowErrors, isEmpty, reason: 'Layout overflow on iPad Pro');
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
+      await tester.pump();
+
+      expect(
+        overflowErrors,
+        isEmpty,
+        reason: 'No layout overflow should occur on iPad Pro',
+      );
     });
 
-    testWidgets('all 4 products built (GridView shrinkWrap on iPad Pro)', (
-      tester,
-    ) async {
-      setIpadProView(tester);
-      await _pumpHome(tester);
-      // 1024 px is still in the tablet range (< 1100), so 2-column layout.
-      expect(find.byType(ProductCard), findsNWidgets(4));
-    });
+    testWidgets(
+      'last product row is not covered by bottom navigation after scrolling',
+      (tester) async {
+        setIpadProViewport(tester);
+        await _pumpHome(tester);
+
+        await tester.drag(
+          find.byType(CustomScrollView),
+          const Offset(0, -2000),
+        );
+        await tester.pump();
+
+        final pepperFinder = find.byKey(const ValueKey('Pepper'));
+        expect(
+          pepperFinder,
+          findsOneWidget,
+          reason: 'Pepper card should be visible after scrolling to the bottom',
+        );
+
+        final cardBottom = tester.getBottomLeft(pepperFinder).dy;
+        final navTop = tester.getTopLeft(find.byType(GroceryBottomNav)).dy;
+
+        expect(
+          cardBottom,
+          lessThanOrEqualTo(navTop + 1),
+          reason:
+              'Last product card bottom edge should not extend past the '
+              'bottom navigation top edge on iPad Pro',
+        );
+      },
+    );
   });
 
-  // ── Interaction tests (tall viewport so all cards are in view) ────────────
   group('HomePage — interactions', () {
-    void setTallMobileView(WidgetTester tester) {
+    testWidgets('search filters products — shows only matching', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(400, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-    }
 
-    testWidgets('search filters products — shows only matching', (
-      tester,
-    ) async {
-      setTallMobileView(tester);
       await _pumpHome(tester);
+
+      expect(find.byType(ProductCard), findsWidgets);
 
       await tester.enterText(find.byType(TextField), 'Banana');
       await tester.pump();
@@ -230,7 +439,11 @@ void main() {
     testWidgets('search with no match shows empty-state message', (
       tester,
     ) async {
-      setTallMobileView(tester);
+      tester.view.physicalSize = const Size(400, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await _pumpHome(tester);
 
       await tester.enterText(find.byType(TextField), 'zzznomatch');
@@ -240,8 +453,14 @@ void main() {
       expect(find.text('No products found'), findsOneWidget);
     });
 
-    testWidgets('tapping add-to-cart shows quantity control', (tester) async {
-      setTallMobileView(tester);
+    testWidgets('tapping add-to-cart on first product shows quantity control', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(400, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await _pumpHome(tester);
 
       final addButtons = find.byIcon(Icons.add);

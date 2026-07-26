@@ -1,13 +1,8 @@
 import 'package:fruit/models.dart';
 
-/// Metadata for a single promotional banner slide.
 class BannerItem {
   final String imagePath;
-
-  /// Short headline shown as a text overlay on the banner card.
   final String headline;
-
-  /// Supporting sub-line shown below the headline.
   final String subtext;
 
   const BannerItem({
@@ -17,15 +12,9 @@ class BannerItem {
   });
 }
 
-/// Static mock data for the Home Page.
-///
-/// Extracted from the original [HomeScreen] static lists so the page widget
-/// has no knowledge of raw data.  Field names deliberately match the existing
-/// model typos (imageReferance, imageRefernce) to avoid breaking changes.
 class HomeData {
   HomeData._();
 
-  /// Banner slides with corrected promotional text.
   static const List<BannerItem> bannerItems = [
     BannerItem(
       imagePath: 'assets/banners/Slider 1.png',
@@ -43,10 +32,6 @@ class HomeData {
       subtext: 'Up to 25% off',
     ),
   ];
-
-  /// Backward-compatible list of image paths for external callers.
-  static List<String> get banners =>
-      bannerItems.map((b) => b.imagePath).toList();
 
   static const List<Category> categories = [
     Category(

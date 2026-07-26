@@ -1,10 +1,29 @@
 import 'package:flutter/material.dart';
 
-import 'app_colors.dart';
+const double tabletBreakpoint = 600;
+const double desktopBreakpoint = 1100;
 
-/// Central text-style definitions for the Grabber grocery app.
-///
-/// All styles use the system font; no additional font packages are required.
+class AppColors {
+  AppColors._();
+
+  static const Color primary = Color(0xFF0CA201);
+  static const Color primarySurface = Color(0xFFE8F5E9);
+
+  static const Color surfaceWhite = Colors.white;
+  static const Color cardBackground = Color(0xFFF2F2F2);
+  static const Color divider = Color(0xFFE0E0E0);
+
+  static const Color textPrimary = Color(0xFF1A1A1A);
+  static const Color textSecondary = Color(0xFF6B6B6B);
+  static const Color textMuted = Color(0xFF9E9E9E);
+
+  static const Color ratingYellow = Color(0xFFFFC107);
+  static const Color errorRed = Color(0xFFE53935);
+  static const Color badgeRed = Colors.red;
+
+  static const Color shadowBlack = Color(0x14000000);
+}
+
 class AppTextStyles {
   AppTextStyles._();
 
@@ -16,7 +35,6 @@ class AppTextStyles {
 
   static const TextStyle greetingSub = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.normal,
     color: AppColors.textSecondary,
   );
 

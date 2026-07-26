@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:fruit/core/app_theme.dart';
 import 'package:fruit/splash.dart';
 
 void main() {
@@ -17,17 +18,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0CA201),
+          seedColor: AppColors.primary,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: AppColors.surfaceWhite,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surfaceWhite,
           elevation: 0,
           scrolledUnderElevation: 0,
         ),
       ),
-      home: Scaffold(body: SplashScreen()),
+      home: const SplashScreen(),
     );
   }
 }
