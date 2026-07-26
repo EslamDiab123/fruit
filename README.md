@@ -11,23 +11,30 @@ The page keeps a compact two-column product grid on phones. Tablet layouts cente
 ```text
 lib/
 ├── main.dart
-├── splash.dart
-├── models.dart
 ├── core/
 │   └── app_theme.dart
 └── features/
-    └── home/
-        ├── home_data.dart
-        ├── home_page.dart
-        └── widgets/
-            ├── home_header.dart
-            ├── promo_banner.dart
-            ├── category_item.dart
-            ├── product_card.dart
-            └── home_bottom_bars.dart
+    ├── home/
+    │   ├── data/
+    │   │   └── home_data.dart
+    │   ├── models/
+    │   │   └── home_models.dart
+    │   ├── view_models/
+    │   │   └── home_view_model.dart
+    │   └── views/
+    │       ├── home_page.dart
+    │       └── widgets/
+    │           ├── home_header.dart
+    │           ├── promo_banner.dart
+    │           ├── category_item.dart
+    │           ├── product_card.dart
+    │           └── home_bottom_bars.dart
+    └── splash/
+        └── views/
+            └── splash_page.dart
 ```
 
-The header and search field share one file, as do the two bottom bars. The carousel and product card remain separate because they own state or interaction logic. Repeated category tiles also stay reusable, while the one-use section header is private to the Home Page.
+The Home feature follows a lightweight MVVM structure. `HomeViewModel` manages search, category and navigation selection, favourites, cart state, and persistence. The views contain layout code, while the models and static data remain independent of the UI. Splash is a view-only feature because it has no application state of its own.
 
 ## Run the project
 
@@ -44,7 +51,7 @@ flutter analyze
 flutter test
 ```
 
-The widget tests cover mobile and tablet rendering, product-grid geometry, scrolling, search, cart interaction, and layout overflows.
+The tests cover the Home ViewModel, mobile and tablet rendering, product-grid geometry, scrolling, search, cart interaction, and layout overflows.
 
 ## Screenshots
 

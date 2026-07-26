@@ -1,19 +1,33 @@
 class Category {
   final String text;
-  final String imageReferance;
-  const Category({required this.text, required this.imageReferance});
+  final String imageReference;
+
+  const Category({required this.text, required this.imageReference});
 }
 
-class Products {
+class Product {
   final String name;
-  final String imageRefernce;
+  final String imageReference;
   final double price;
   final double rate;
-  const Products({
+
+  const Product({
     required this.name,
-    required this.imageRefernce,
+    required this.imageReference,
     required this.price,
     required this.rate,
+  });
+}
+
+class BannerItem {
+  final String imagePath;
+  final String headline;
+  final String subtext;
+
+  const BannerItem({
+    required this.imagePath,
+    required this.headline,
+    required this.subtext,
   });
 }
 

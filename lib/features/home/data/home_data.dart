@@ -1,16 +1,4 @@
-import 'package:fruit/models.dart';
-
-class BannerItem {
-  final String imagePath;
-  final String headline;
-  final String subtext;
-
-  const BannerItem({
-    required this.imagePath,
-    required this.headline,
-    required this.subtext,
-  });
-}
+import 'package:fruit/features/home/models/home_models.dart';
 
 class HomeData {
   HomeData._();
@@ -36,41 +24,41 @@ class HomeData {
   static const List<Category> categories = [
     Category(
       text: 'Beverages',
-      imageReferance: 'assets/Category/Beverages.png',
+      imageReference: 'assets/Category/Beverages.png',
     ),
-    Category(text: 'Fruits', imageReferance: 'assets/Category/fruits.png'),
-    Category(text: 'Laundry', imageReferance: 'assets/Category/Laundry.png'),
+    Category(text: 'Fruits', imageReference: 'assets/Category/fruits.png'),
+    Category(text: 'Laundry', imageReference: 'assets/Category/Laundry.png'),
     Category(
       text: 'Milk & Egg',
-      imageReferance: 'assets/Category/Milk&egg.png',
+      imageReference: 'assets/Category/Milk&egg.png',
     ),
     Category(
       text: 'Vegetables',
-      imageReferance: 'assets/Category/Vegetabls.png',
+      imageReference: 'assets/Category/Vegetabls.png',
     ),
   ];
 
-  static const List<Products> products = [
-    Products(
-      imageRefernce: 'assets/fruits/Banana.png',
+  static const List<Product> products = [
+    Product(
+      imageReference: 'assets/fruits/Banana.png',
       name: 'Banana',
       price: 3.99,
       rate: 4.8,
     ),
-    Products(
-      imageRefernce: 'assets/fruits/Limon.png',
+    Product(
+      imageReference: 'assets/fruits/Limon.png',
       name: 'Lemon',
       price: 2.99,
       rate: 4.8,
     ),
-    Products(
-      imageRefernce: 'assets/fruits/Orange.png',
+    Product(
+      imageReference: 'assets/fruits/Orange.png',
       name: 'Orange',
       price: 2.99,
       rate: 4.8,
     ),
-    Products(
-      imageRefernce: 'assets/fruits/Pepper.png',
+    Product(
+      imageReference: 'assets/fruits/Pepper.png',
       name: 'Pepper',
       price: 2.99,
       rate: 4.8,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:fruit/core/app_theme.dart';
-import 'package:fruit/models.dart';
+import 'package:fruit/features/home/models/home_models.dart';
 
 class GroceryBottomNav extends StatelessWidget {
   final int selectedIndex;

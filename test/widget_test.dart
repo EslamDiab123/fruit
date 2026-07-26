@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:fruit/features/home/home_page.dart';
-import 'package:fruit/features/home/widgets/home_bottom_bars.dart';
-import 'package:fruit/features/home/widgets/home_header.dart';
-import 'package:fruit/features/home/widgets/product_card.dart';
+import 'package:fruit/features/home/views/home_page.dart';
+import 'package:fruit/features/home/views/widgets/home_bottom_bars.dart';
+import 'package:fruit/features/home/views/widgets/home_header.dart';
+import 'package:fruit/features/home/views/widgets/product_card.dart';
 
 Widget _buildApp() {
   return const MaterialApp(home: HomePage(enableBannerAutoPlay: false));

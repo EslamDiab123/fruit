@@ -2,7 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 
 import 'package:fruit/core/app_theme.dart';
-import 'package:fruit/features/home/home_data.dart';
+import 'package:fruit/features/home/models/home_models.dart';
 
 class PromoBanner extends StatefulWidget {
   final List<BannerItem> bannerItems;

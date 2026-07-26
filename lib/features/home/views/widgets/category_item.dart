@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:fruit/core/app_theme.dart';
-import 'package:fruit/models.dart';
+import 'package:fruit/features/home/models/home_models.dart';
 
 class CategoryItem extends StatelessWidget {
   final Category category;
@@ -50,7 +50,7 @@ class CategoryItem extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.all(iconPadding),
                 child: Image.asset(
-                  category.imageReferance,
+                  category.imageReference,
                   fit: BoxFit.contain,
                 ),
               ),

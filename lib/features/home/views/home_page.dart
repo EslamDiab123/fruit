@@ -1,16 +1,14 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fruit/core/app_theme.dart';
-import 'package:fruit/features/home/home_data.dart';
-import 'package:fruit/features/home/widgets/category_item.dart';
-import 'package:fruit/features/home/widgets/home_bottom_bars.dart';
-import 'package:fruit/features/home/widgets/home_header.dart';
-import 'package:fruit/features/home/widgets/product_card.dart';
-import 'package:fruit/features/home/widgets/promo_banner.dart';
-import 'package:fruit/models.dart';
+import 'package:fruit/features/home/data/home_data.dart';
+import 'package:fruit/features/home/models/home_models.dart';
+import 'package:fruit/features/home/view_models/home_view_model.dart';
+import 'package:fruit/features/home/views/widgets/category_item.dart';
+import 'package:fruit/features/home/views/widgets/home_bottom_bars.dart';
+import 'package:fruit/features/home/views/widgets/home_header.dart';
+import 'package:fruit/features/home/views/widgets/product_card.dart';
+import 'package:fruit/features/home/views/widgets/promo_banner.dart';
 
 class HomePage extends StatefulWidget {
   final bool enableBannerAutoPlay;
@@ -22,97 +20,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<CartItem> _cart = [];
-  String _searchQuery = '';
-  int _selectedNavIndex = 0;
-  int _selectedCategoryIndex = 0;
-  final Set<String> _favourites = {};
+  late final HomeViewModel _viewModel;
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadCart();
+    _viewModel = HomeViewModel()..loadCart();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _viewModel.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadCart() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('cart');
-    if (jsonString != null && mounted) {
-      final decoded = jsonDecode(jsonString) as List<dynamic>;
-      setState(() {
-        _cart = decoded
-            .map<CartItem>((e) => CartItem.fromJson(e as Map<String, dynamic>))
-            .toList();
-      });
-    }
-  }
-
-  Future<void> _saveCart() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'cart',
-      jsonEncode(_cart.map((e) => e.toJson()).toList()),
-    );
-  }
-
-  void _addToCart(Products product) {
-    setState(() {
-      _cart.add(
-        CartItem(
-          image: product.imageRefernce,
-          name: product.name,
-          price: product.price,
-          quantity: 1,
-        ),
-      );
-    });
-    _saveCart();
-  }
-
-  void _incrementCart(int cartIndex) {
-    setState(() {
-      _cart[cartIndex].quantity++;
-    });
-    _saveCart();
-  }
-
-  void _decrementCart(int cartIndex) {
-    if (cartIndex < 0 || cartIndex >= _cart.length) return;
-    setState(() {
-      if (_cart[cartIndex].quantity > 1) {
-        _cart[cartIndex].quantity--;
-      } else {
-        _cart.removeAt(cartIndex);
-      }
-    });
-    _saveCart();
-  }
-
-  int _sumBadge() => _cart.fold(0, (sum, item) => sum + item.quantity);
-
-  void _toggleFavourite(String productName) {
-    setState(() {
-      if (_favourites.contains(productName)) {
-        _favourites.remove(productName);
-      } else {
-        _favourites.add(productName);
-      }
-    });
-  }
-
-  List<Products> get _filteredProducts {
-    final q = _searchQuery.trim().toLowerCase();
-    if (q.isEmpty) return HomeData.products;
-    return HomeData.products
-        .where((p) => p.name.toLowerCase().contains(q))
-        .toList();
   }
 
   void _showBasketSheet() {
@@ -123,58 +44,39 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) {
-          return DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.55,
-            minChildSize: 0.35,
-            maxChildSize: 0.85,
-            builder: (ctx, scrollController) => _BasketSheetContent(
-              cart: _cart,
-              scrollController: scrollController,
-              onIncrement: (i) {
-                if (i >= _cart.length) return;
-                setSheetState(() => _cart[i].quantity++);
-                setState(() {});
-                _saveCart();
-              },
-              onDecrement: (i) {
-                if (i >= _cart.length) return;
-                setSheetState(() {
-                  if (_cart[i].quantity > 1) {
-                    _cart[i].quantity--;
-                  } else {
-                    _cart.removeAt(i);
-                  }
-                });
-                setState(() {});
-                _saveCart();
-              },
-            ),
-          );
-        },
+      builder: (ctx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.55,
+        minChildSize: 0.35,
+        maxChildSize: 0.85,
+        builder: (ctx, scrollController) => AnimatedBuilder(
+          animation: _viewModel,
+          builder: (context, _) => _BasketSheetContent(
+            cart: _viewModel.cart,
+            scrollController: scrollController,
+            onIncrement: _viewModel.incrementCartItem,
+            onDecrement: _viewModel.decrementCartItem,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _productCard(List<Products> filtered, int index) {
+  Widget _productCard(List<Product> filtered, int index) {
     final product = filtered[index];
-    final cartIndex = _cart.indexWhere((c) => c.name == product.name);
-    final qty = cartIndex == -1 ? 0 : _cart[cartIndex].quantity;
     return ProductCard(
       key: ValueKey(product.name),
       product: product,
-      cartQuantity: qty,
-      isFavourite: _favourites.contains(product.name),
-      onAddToCart: () => _addToCart(product),
-      onIncrement: () => _incrementCart(cartIndex),
-      onDecrement: () => _decrementCart(cartIndex),
-      onFavouriteTap: () => _toggleFavourite(product.name),
+      cartQuantity: _viewModel.cartQuantity(product),
+      isFavourite: _viewModel.isFavourite(product),
+      onAddToCart: () => _viewModel.addToCart(product),
+      onIncrement: () => _viewModel.incrementProduct(product),
+      onDecrement: () => _viewModel.decrementProduct(product),
+      onFavouriteTap: () => _viewModel.toggleFavourite(product),
     );
   }
 
-  Widget _productGridSliver(List<Products> filtered, bool isTablet) {
+  Widget _productGridSliver(List<Product> filtered, bool isTablet) {
     if (isTablet) {
       return SliverLayoutBuilder(
         builder: (context, constraints) {
@@ -219,102 +121,109 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Products> filtered = _filteredProducts;
-    final bool hasCart = _cart.isNotEmpty;
-    final double screenWidth = MediaQuery.sizeOf(context).width;
-    final bool isTablet =
-        screenWidth >= tabletBreakpoint && screenWidth <= desktopBreakpoint;
+    return AnimatedBuilder(
+      animation: _viewModel,
+      builder: (context, _) {
+        final filtered = _viewModel.filteredProducts;
+        final hasCart = _viewModel.hasCart;
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final isTablet =
+            screenWidth >= tabletBreakpoint && screenWidth <= desktopBreakpoint;
 
-    Widget scrollView = CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: SafeArea(bottom: false, child: const GroceryHeader()),
-        ),
+        Widget scrollView = CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SafeArea(bottom: false, child: const GroceryHeader()),
+            ),
 
-        SliverToBoxAdapter(
-          child: SearchField(
-            controller: _searchController,
-            onChanged: (q) => setState(() => _searchQuery = q),
-          ),
-        ),
-
-        SliverToBoxAdapter(
-          child: PromoBanner(
-            bannerItems: HomeData.bannerItems,
-            enableAutoPlay: widget.enableBannerAutoPlay,
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-        const SliverToBoxAdapter(child: _SectionHeader(title: 'Categories')),
-        SliverToBoxAdapter(
-          child: _CategoriesRow(
-            selectedIndex: _selectedCategoryIndex,
-            onCategoryTap: (i) => setState(() => _selectedCategoryIndex = i),
-          ),
-        ),
-
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-        SliverToBoxAdapter(
-          child: _SectionHeader(
-            title: 'Fresh Products',
-            onActionTap: () {
-              // There is no catalogue screen to open yet.
-            },
-          ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-        if (filtered.isEmpty)
-          const SliverToBoxAdapter(child: _EmptySearchResult())
-        else
-          _productGridSliver(filtered, isTablet),
-
-        // Extra bottom padding so last cards are never hidden behind
-        // the floating cart bar or the bottom nav bar.
-        SliverToBoxAdapter(child: SizedBox(height: hasCart ? 100 : 28)),
-      ],
-    );
-
-    if (isTablet) {
-      scrollView = Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: scrollView,
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: AppColors.surfaceWhite,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: GroceryBottomNav(
-          selectedIndex: _selectedNavIndex,
-          onTap: (i) => setState(() => _selectedNavIndex = i),
-        ),
-      ),
-      body: Stack(
-        children: [
-          scrollView,
-          if (hasCart)
-            Positioned(
-              bottom: 12,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                top: false,
-                child: CartBottomBar(
-                  cart: _cart,
-                  totalQuantity: _sumBadge(),
-                  onViewBasket: _showBasketSheet,
-                ),
+            SliverToBoxAdapter(
+              child: SearchField(
+                controller: _searchController,
+                onChanged: _viewModel.setSearchQuery,
               ),
             ),
-        ],
-      ),
+
+            SliverToBoxAdapter(
+              child: PromoBanner(
+                bannerItems: HomeData.bannerItems,
+                enableAutoPlay: widget.enableBannerAutoPlay,
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            const SliverToBoxAdapter(
+              child: _SectionHeader(title: 'Categories'),
+            ),
+            SliverToBoxAdapter(
+              child: _CategoriesRow(
+                selectedIndex: _viewModel.selectedCategoryIndex,
+                onCategoryTap: _viewModel.selectCategory,
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            SliverToBoxAdapter(
+              child: _SectionHeader(
+                title: 'Fresh Products',
+                onActionTap: () {
+                  // There is no catalogue screen to open yet.
+                },
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+            if (filtered.isEmpty)
+              const SliverToBoxAdapter(child: _EmptySearchResult())
+            else
+              _productGridSliver(filtered, isTablet),
+
+            // Extra bottom padding so last cards are never hidden behind
+            // the floating cart bar or the bottom nav bar.
+            SliverToBoxAdapter(child: SizedBox(height: hasCart ? 100 : 28)),
+          ],
+        );
+
+        if (isTablet) {
+          scrollView = Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: scrollView,
+            ),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.surfaceWhite,
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: GroceryBottomNav(
+              selectedIndex: _viewModel.selectedNavIndex,
+              onTap: _viewModel.selectNavItem,
+            ),
+          ),
+          body: Stack(
+            children: [
+              scrollView,
+              if (hasCart)
+                Positioned(
+                  bottom: 12,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    top: false,
+                    child: CartBottomBar(
+                      cart: _viewModel.cart,
+                      totalQuantity: _viewModel.totalQuantity,
+                      onViewBasket: _showBasketSheet,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

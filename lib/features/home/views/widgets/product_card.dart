@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:fruit/core/app_theme.dart';
-import 'package:fruit/models.dart';
+import 'package:fruit/features/home/models/home_models.dart';
 
 class ProductCard extends StatelessWidget {
-  final Products product;
+  final Product product;
   final int cartQuantity;
   final bool isFavourite;
   final VoidCallback onAddToCart;
@@ -68,7 +68,7 @@ class ProductCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Image.asset(
-                        product.imageRefernce,
+                        product.imageReference,
                         fit: BoxFit.contain,
                       ),
                     ),

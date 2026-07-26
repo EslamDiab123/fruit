@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:fruit/core/app_theme.dart';
-import 'package:fruit/splash.dart';
+import 'package:fruit/features/splash/views/splash_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
           scrolledUnderElevation: 0,
         ),
       ),
-      home: const SplashScreen(),
+      home: const SplashPage(),
     );
   }
 }
