@@ -53,12 +53,10 @@ flutter test
 
 The tests cover the Home ViewModel, mobile and tablet rendering, product-grid geometry, scrolling, search, cart interaction, and layout overflows.
 
-## Screenshots
+## Demo video
 
-### Mobile
+[Watch the app demo](demo/grabber_demo.mp4)
 
-![Grabber Home Page on iPhone 12](screenshots/iphone_12.png)
+## Download APK
 
-### Tablet
-
-![Grabber Home Page on iPad Pro](screenshots/ipad_pro.png)
+[Download the Android APK](https://docs.google.com/uc?export=download&id=1fePrrQ7S-su2XEEBrO0AEvITRVPZLkxi)
