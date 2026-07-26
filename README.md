@@ -55,7 +55,7 @@ The tests cover the Home ViewModel, mobile and tablet rendering, product-grid ge
 
 ## Demo video
 
-https://github.com/user-attachments/assets/49dc265e-b695-4ff2-9be6-bbf0ef1c987c
+https://github.com/user-attachments/assets/a9ee3b4c-faf0-422b-ab1e-2c36300765ae
 
 ## Download APK
 
