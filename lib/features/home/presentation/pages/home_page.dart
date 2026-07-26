@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:fruit/core/constants/app_breakpoints.dart';
 import 'package:fruit/core/constants/app_colors.dart';
 import 'package:fruit/core/constants/app_text_styles.dart';
 import 'package:fruit/features/home/data/home_data.dart';
@@ -21,6 +22,13 @@ import 'package:fruit/models.dart';
 /// Manages cart state (persisted via SharedPreferences), favourite state,
 /// category selection and live product search filtering — all locally, with
 /// no external dependencies beyond what already existed in the original code.
+///
+/// ## Responsive layout
+/// | Mode    | Width         | Grid     | Max content width |
+/// |---------|---------------|----------|-------------------|
+/// | Mobile  | < 600 px      | 2 col    | full-width        |
+/// | Tablet  | 600–1100 px   | 2 col    | 900 px (720 grid) |
+/// | Desktop | > 1100 px     | 4 col    | 1100 px           |
 ///
 /// Set [enableBannerAutoPlay] to false in widget tests to prevent carousel
 /// timers from blocking [WidgetTester.pump] calls.
@@ -185,12 +193,37 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ── Product card helper ───────────────────────────────────────────────────
+
+  /// Builds a [ProductCard] for the product at [index] in [filtered].
+  ///
+  /// Extracted to avoid duplicating cart-index logic between the mobile
+  /// SliverGrid path and the tablet/desktop GridView path.
+  Widget _buildCard(List<Products> filtered, int index) {
+    final product = filtered[index];
+    final cartIndex = _cart.indexWhere((c) => c.name == product.name);
+    final qty = cartIndex == -1 ? 0 : _cart[cartIndex].quantity;
+    return ProductCard(
+      product: product,
+      cartQuantity: qty,
+      isFavourite: _favourites.contains(product.name),
+      onAddToCart: () => _addToCart(product),
+      onIncrement: () => _incrementCart(cartIndex),
+      onDecrement: () => _decrementCart(cartIndex),
+      onFavouriteTap: () => _toggleFavourite(product.name),
+    );
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final List<Products> filtered = _filteredProducts;
     final bool hasCart = _cart.isNotEmpty;
+
+    final double w = MediaQuery.sizeOf(context).width;
+    final bool isTabletOrWider = w >= AppBreakpoints.tablet;
+    final bool isDesktop = w >= AppBreakpoints.desktop;
 
     return Scaffold(
       backgroundColor: AppColors.surfaceWhite,
@@ -207,80 +240,114 @@ class _HomePageState extends State<HomePage> {
           // ── Scrollable content ─────────────────────────────────────────
           CustomScrollView(
             slivers: [
-              // Header (SafeArea covers status bar)
+              // ── Header (SafeArea covers status bar) ──────────────────
               SliverToBoxAdapter(
-                child: SafeArea(bottom: false, child: const GroceryHeader()),
-              ),
-
-              // Search field — performs live filtering
-              SliverToBoxAdapter(
-                child: SearchField(
-                  controller: _searchController,
-                  onChanged: (q) => setState(() => _searchQuery = q),
+                child: SafeArea(
+                  bottom: false,
+                  child: _Frame(maxWidth: 900, child: GroceryHeader()),
                 ),
               ),
 
-              // Promotional banner
+              // ── Search field — performs live filtering ────────────────
               SliverToBoxAdapter(
-                child: PromoBanner(
-                  bannerPaths: HomeData.banners,
-                  enableAutoPlay: widget.enableBannerAutoPlay,
+                child: _Frame(
+                  maxWidth: 900,
+                  child: SearchField(
+                    controller: _searchController,
+                    onChanged: (q) => setState(() => _searchQuery = q),
+                  ),
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-              // Categories
-              const SliverToBoxAdapter(
-                child: SectionHeader(title: 'Categories'),
-              ),
+              // ── Promotional banner ────────────────────────────────────
               SliverToBoxAdapter(
-                child: _CategoriesRow(
-                  selectedIndex: _selectedCategoryIndex,
-                  onCategoryTap: (i) =>
-                      setState(() => _selectedCategoryIndex = i),
+                child: _Frame(
+                  maxWidth: 900,
+                  child: PromoBanner(
+                    bannerItems: HomeData.bannerItems,
+                    enableAutoPlay: widget.enableBannerAutoPlay,
+                  ),
                 ),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-              // Products section header
+              // ── Categories section header ─────────────────────────────
               SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Fresh Products',
-                  onActionTap: () {
-                    // Placeholder – no full catalogue screen in scope
-                  },
+                child: _Frame(
+                  maxWidth: 900,
+                  child: const SectionHeader(title: 'Categories'),
+                ),
+              ),
+
+              // ── Category row / grid ───────────────────────────────────
+              SliverToBoxAdapter(
+                child: _Frame(
+                  maxWidth: 900,
+                  child: _CategoriesRow(
+                    selectedIndex: _selectedCategoryIndex,
+                    onCategoryTap: (i) =>
+                        setState(() => _selectedCategoryIndex = i),
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+              // ── Products section header ───────────────────────────────
+              SliverToBoxAdapter(
+                child: _Frame(
+                  maxWidth: 900,
+                  child: SectionHeader(
+                    title: 'Fresh Products',
+                    onActionTap: () {
+                      // Placeholder – no full catalogue screen in scope
+                    },
+                  ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-              // Product grid or empty state
+              // ── Product grid or empty state ───────────────────────────
               if (filtered.isEmpty)
                 const SliverToBoxAdapter(child: _EmptySearchResult())
+              else if (isTabletOrWider)
+                // Tablet / Desktop: GridView inside a ConstrainedBox so the
+                // SliverGrid lazy-building is not needed for 4 items.
+                SliverToBoxAdapter(
+                  child: _Frame(
+                    maxWidth: isDesktop ? 1080 : 720,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filtered.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          // Tablet → always 2 columns for 4 products (2×2)
+                          // Desktop (>1100) → 4 columns
+                          crossAxisCount: isDesktop ? 4 : 2,
+                          mainAxisSpacing: isDesktop ? 16 : 20,
+                          crossAxisSpacing: isDesktop ? 16 : 20,
+                          childAspectRatio: isDesktop ? 0.78 : 1.05,
+                        ),
+                        itemBuilder: (ctx, index) =>
+                            _buildCard(filtered, index),
+                      ),
+                    ),
+                  ),
+                )
               else
+                // Mobile: keep efficient SliverPadding + SliverGrid so
+                // heavy lists (if added later) remain lazily built.
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final product = filtered[index];
-                      final cartIndex = _cart.indexWhere(
-                        (c) => c.name == product.name,
-                      );
-                      final qty = cartIndex == -1
-                          ? 0
-                          : _cart[cartIndex].quantity;
-                      return ProductCard(
-                        product: product,
-                        cartQuantity: qty,
-                        isFavourite: _favourites.contains(product.name),
-                        onAddToCart: () => _addToCart(product),
-                        onIncrement: () => _incrementCart(cartIndex),
-                        onDecrement: () => _decrementCart(cartIndex),
-                        onFavouriteTap: () => _toggleFavourite(product.name),
-                      );
-                    }, childCount: filtered.length),
-                    // Adapts naturally: 2 columns on phones, more on tablets.
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildCard(filtered, index),
+                      childCount: filtered.length,
+                    ),
+                    // maxCrossAxisExtent: 220 → 2 cols on all phones
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 220,
@@ -305,14 +372,49 @@ class _HomePageState extends State<HomePage> {
               right: 0,
               child: SafeArea(
                 top: false,
-                child: CartBottomBar(
-                  cart: _cart,
-                  totalQuantity: _sumBadge(),
-                  onViewBasket: _showBasketSheet,
-                ),
+                child: isTabletOrWider
+                    ? Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 720),
+                          child: CartBottomBar(
+                            cart: _cart,
+                            totalQuantity: _sumBadge(),
+                            onViewBasket: _showBasketSheet,
+                          ),
+                        ),
+                      )
+                    : CartBottomBar(
+                        cart: _cart,
+                        totalQuantity: _sumBadge(),
+                        onViewBasket: _showBasketSheet,
+                      ),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Layout helpers ───────────────────────────────────────────────────────────
+
+/// Centres [child] horizontally and constrains it to [maxWidth].
+///
+/// Used in every [SliverToBoxAdapter] so that page content stays within
+/// 900 px on tablet and does not stretch wall-to-wall on large displays.
+class _Frame extends StatelessWidget {
+  final Widget child;
+  final double maxWidth;
+
+  const _Frame({required this.child, this.maxWidth = 900});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
       ),
     );
   }
@@ -331,6 +433,28 @@ class _CategoriesRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final bool isTabletOrWider = w >= AppBreakpoints.tablet;
+
+    if (isTabletOrWider) {
+      // Tablet/desktop: all 5 categories in a centred, evenly-spaced row.
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(
+            HomeData.categories.length,
+            (i) => CategoryItem(
+              category: HomeData.categories[i],
+              isSelected: selectedIndex == i,
+              onTap: () => onCategoryTap(i),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Mobile: horizontally scrollable row (unchanged)
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

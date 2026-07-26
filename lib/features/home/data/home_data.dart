@@ -1,5 +1,22 @@
 import 'package:fruit/models.dart';
 
+/// Metadata for a single promotional banner slide.
+class BannerItem {
+  final String imagePath;
+
+  /// Short headline shown as a text overlay on the banner card.
+  final String headline;
+
+  /// Supporting sub-line shown below the headline.
+  final String subtext;
+
+  const BannerItem({
+    required this.imagePath,
+    required this.headline,
+    required this.subtext,
+  });
+}
+
 /// Static mock data for the Home Page.
 ///
 /// Extracted from the original [HomeScreen] static lists so the page widget
@@ -8,11 +25,28 @@ import 'package:fruit/models.dart';
 class HomeData {
   HomeData._();
 
-  static const List<String> banners = [
-    'assets/banners/Slider 1.png',
-    'assets/banners/Slider 2.png',
-    'assets/banners/Slider 3.png',
+  /// Banner slides with corrected promotional text.
+  static const List<BannerItem> bannerItems = [
+    BannerItem(
+      imagePath: 'assets/banners/Slider 1.png',
+      headline: 'Get same-day delivery',
+      subtext: 'On orders over \$20',
+    ),
+    BannerItem(
+      imagePath: 'assets/banners/Slider 2.png',
+      headline: 'Save big on fresh groceries',
+      subtext: 'Up to 30% off',
+    ),
+    BannerItem(
+      imagePath: 'assets/banners/Slider 3.png',
+      headline: 'For first-time buyers',
+      subtext: 'Up to 25% off',
+    ),
   ];
+
+  /// Backward-compatible list of image paths for external callers.
+  static List<String> get banners =>
+      bannerItems.map((b) => b.imagePath).toList();
 
   static const List<Category> categories = [
     Category(

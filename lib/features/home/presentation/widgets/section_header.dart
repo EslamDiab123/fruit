@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:fruit/core/constants/app_breakpoints.dart';
 import 'package:fruit/core/constants/app_text_styles.dart';
 
 /// A row containing a bold section title and an optional "See all" action.
+///
+/// Font size and horizontal padding scale up on tablets.
 class SectionHeader extends StatelessWidget {
   final String title;
   final String actionLabel;
@@ -17,15 +20,20 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final bool isTabletOrWider = w >= AppBreakpoints.tablet;
+    final double hPad = isTabletOrWider ? 32.0 : 20.0;
+    final double fontSize = isTabletOrWider ? 19.0 : 16.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
             child: Text(
               title,
-              style: AppTextStyles.sectionTitle,
+              style: AppTextStyles.sectionTitle.copyWith(fontSize: fontSize),
               overflow: TextOverflow.ellipsis,
             ),
           ),

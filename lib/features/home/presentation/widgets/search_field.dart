@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:fruit/core/constants/app_breakpoints.dart';
 import 'package:fruit/core/constants/app_colors.dart';
 
 /// A styled search input that calls [onChanged] on every keystroke.
 ///
 /// Pass a [controller] when you need to read or clear the value externally.
+/// Horizontal padding scales up to 32 px on tablets.
 class SearchField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final TextEditingController? controller;
@@ -14,8 +16,11 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final double hPad = w >= AppBreakpoints.tablet ? 32.0 : 20.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 10),
       child: TextField(
         controller: controller,
         onChanged: onChanged,

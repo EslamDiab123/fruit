@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:fruit/core/constants/app_breakpoints.dart';
 import 'package:fruit/core/constants/app_colors.dart';
 import 'package:fruit/core/constants/app_text_styles.dart';
 import 'package:fruit/models.dart';
@@ -8,7 +9,9 @@ import 'package:fruit/models.dart';
 ///
 /// Inline quantity controls replace the old Positioned [AddtoCart] /
 /// [RemoveFromCart] widgets, keeping the same cart logic but within a
-/// self-contained card layout that works in a SliverGrid.
+/// self-contained card layout that works in a SliverGrid or a GridView.
+///
+/// Touch targets, font sizes, and button dimensions scale up on tablets.
 class ProductCard extends StatelessWidget {
   final Products product;
 
@@ -33,6 +36,16 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final bool isTabletOrWider = w >= AppBreakpoints.tablet;
+
+    // Responsive sizes
+    final double favBtnSize = isTabletOrWider ? 36.0 : 30.0;
+    final double favIconSize = isTabletOrWider ? 18.0 : 15.0;
+    final double productNameSize = isTabletOrWider ? 15.5 : 15.0;
+    final double productPriceSize = isTabletOrWider ? 15.5 : 16.0;
+    final double ratingIconSize = isTabletOrWider ? 15.0 : 14.0;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
@@ -74,15 +87,15 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Favourite button
+                // Favourite button — larger touch target on tablet
                 Positioned(
                   top: 8,
                   right: 8,
                   child: GestureDetector(
                     onTap: onFavouriteTap,
                     child: Container(
-                      width: 30,
-                      height: 30,
+                      width: favBtnSize,
+                      height: favBtnSize,
                       decoration: BoxDecoration(
                         color: AppColors.surfaceWhite,
                         shape: BoxShape.circle,
@@ -95,7 +108,7 @@ class ProductCard extends StatelessWidget {
                       ),
                       child: Icon(
                         isFavourite ? Icons.favorite : Icons.favorite_border,
-                        size: 15,
+                        size: favIconSize,
                         color: isFavourite
                             ? AppColors.errorRed
                             : AppColors.textMuted,
@@ -116,17 +129,19 @@ class ProductCard extends StatelessWidget {
                 children: [
                   Text(
                     product.name,
-                    style: AppTextStyles.productName,
+                    style: AppTextStyles.productName.copyWith(
+                      fontSize: productNameSize,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.star_rounded,
                         color: AppColors.ratingYellow,
-                        size: 14,
+                        size: ratingIconSize,
                       ),
                       const SizedBox(width: 3),
                       Text(
@@ -142,7 +157,9 @@ class ProductCard extends StatelessWidget {
                       Flexible(
                         child: Text(
                           '\$${product.price.toStringAsFixed(2)}',
-                          style: AppTextStyles.productPrice,
+                          style: AppTextStyles.productPrice.copyWith(
+                            fontSize: productPriceSize,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -151,6 +168,7 @@ class ProductCard extends StatelessWidget {
                         quantity: cartQuantity,
                         onAdd: cartQuantity == 0 ? onAddToCart : onIncrement,
                         onRemove: onDecrement,
+                        isTablet: isTabletOrWider,
                       ),
                     ],
                   ),
@@ -175,32 +193,40 @@ class _CartControl extends StatelessWidget {
   final int quantity;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
+  final bool isTablet;
 
   const _CartControl({
     required this.quantity,
     required this.onAdd,
     required this.onRemove,
+    this.isTablet = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double btnH = isTablet ? 34.0 : 30.0;
+    final double btnW = isTablet ? 32.0 : 28.0;
+    final double plusSize = isTablet ? 20.0 : 18.0;
+    final double innerSize = isTablet ? 16.0 : 15.0;
+    final double countFont = isTablet ? 13.0 : 12.0;
+
     if (quantity == 0) {
       return GestureDetector(
         onTap: onAdd,
         child: Container(
-          width: 30,
-          height: 30,
+          width: btnH,
+          height: btnH,
           decoration: BoxDecoration(
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(9),
           ),
-          child: const Icon(Icons.add, color: Colors.white, size: 18),
+          child: Icon(Icons.add, color: Colors.white, size: plusSize),
         ),
       );
     }
 
     return Container(
-      height: 30,
+      height: btnH,
       decoration: BoxDecoration(
         color: AppColors.primarySurface,
         borderRadius: BorderRadius.circular(9),
@@ -212,8 +238,8 @@ class _CartControl extends StatelessWidget {
           GestureDetector(
             onTap: onRemove,
             child: Container(
-              width: 28,
-              height: 30,
+              width: btnW,
+              height: btnH,
               decoration: BoxDecoration(
                 color: quantity == 1
                     ? AppColors.errorRed.withValues(alpha: 0.15)
@@ -224,7 +250,7 @@ class _CartControl extends StatelessWidget {
               ),
               child: Icon(
                 quantity == 1 ? Icons.delete_outline_rounded : Icons.remove,
-                size: 15,
+                size: innerSize,
                 color: quantity == 1 ? AppColors.errorRed : AppColors.primary,
               ),
             ),
@@ -234,8 +260,8 @@ class _CartControl extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 7),
             child: Text(
               '$quantity',
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: countFont,
                 fontWeight: FontWeight.w700,
                 color: AppColors.primary,
               ),
@@ -245,15 +271,15 @@ class _CartControl extends StatelessWidget {
           GestureDetector(
             onTap: onAdd,
             child: Container(
-              width: 28,
-              height: 30,
+              width: btnW,
+              height: btnH,
               decoration: const BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.horizontal(
                   right: Radius.circular(9),
                 ),
               ),
-              child: const Icon(Icons.add, size: 15, color: Colors.white),
+              child: Icon(Icons.add, size: innerSize, color: Colors.white),
             ),
           ),
         ],

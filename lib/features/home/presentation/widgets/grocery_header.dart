@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:fruit/core/constants/app_breakpoints.dart';
 import 'package:fruit/core/constants/app_colors.dart';
 import 'package:fruit/core/constants/app_text_styles.dart';
 
 /// App-bar replacement for the Home Page.
 ///
 /// Shows the delivery address row and a greeting below it.
+/// Typography and padding scale up on tablet (≥ 600 px).
 class GroceryHeader extends StatelessWidget {
   final String address;
 
@@ -14,8 +16,12 @@ class GroceryHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final bool isTabletOrWider = w >= AppBreakpoints.tablet;
+    final double hPad = isTabletOrWider ? 32.0 : 20.0;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -23,14 +29,16 @@ class GroceryHeader extends StatelessWidget {
             children: [
               SvgPicture.asset(
                 'assets/icons/Icons (1).svg',
-                width: 18,
-                height: 18,
+                width: isTabletOrWider ? 20 : 18,
+                height: isTabletOrWider ? 20 : 18,
               ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   address,
-                  style: AppTextStyles.addressText,
+                  style: AppTextStyles.addressText.copyWith(
+                    fontSize: isTabletOrWider ? 16.0 : 15.0,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -40,13 +48,27 @@ class GroceryHeader extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
               const SizedBox(width: 12),
-              SvgPicture.asset('assets/icons/Icons.svg', width: 26, height: 26),
+              SvgPicture.asset(
+                'assets/icons/Icons.svg',
+                width: isTabletOrWider ? 30 : 26,
+                height: isTabletOrWider ? 30 : 26,
+              ),
             ],
           ),
           const SizedBox(height: 14),
-          const Text('Good Morning! 👋', style: AppTextStyles.greetingSub),
+          Text(
+            'Good Morning! 👋',
+            style: AppTextStyles.greetingSub.copyWith(
+              fontSize: isTabletOrWider ? 16.0 : 14.0,
+            ),
+          ),
           const SizedBox(height: 2),
-          const Text('Find fresh groceries', style: AppTextStyles.greeting),
+          Text(
+            'Find fresh groceries',
+            style: AppTextStyles.greeting.copyWith(
+              fontSize: isTabletOrWider ? 27.0 : 22.0,
+            ),
+          ),
         ],
       ),
     );
