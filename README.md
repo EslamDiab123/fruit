@@ -55,7 +55,7 @@ The tests cover the Home ViewModel, mobile and tablet rendering, product-grid ge
 
 ## Demo video
 
-[Watch the app demo](demo/grabber_demo.mp4)
+https://github.com/user-attachments/assets/49dc265e-b695-4ff2-9be6-bbf0ef1c987c
 
 ## Download APK
 
